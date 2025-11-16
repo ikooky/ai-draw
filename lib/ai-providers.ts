@@ -53,7 +53,7 @@ export async function fetchAvailableModels(): Promise<Array<{ id: string; name: 
   // 如果没有配置 API，返回默认模型列表
   if (!config) {
     console.log('[AI Provider] No API config found, using default model');
-    const defaultModel = process.env.AI_MODEL || 'gpt-4o-mini';
+    const defaultModel = process.env.AI_MODEL || 'gpt-5.1-codex';
     return [{ id: defaultModel, name: defaultModel }];
   }
 
@@ -74,7 +74,7 @@ export async function fetchAvailableModels(): Promise<Array<{ id: string; name: 
     if (!response.ok) {
       console.warn(`[AI Provider] Failed to fetch models: ${response.status}`);
       // 如果获取失败，返回默认模型
-      const defaultModel = process.env.AI_MODEL || 'gpt-4o-mini';
+      const defaultModel = process.env.AI_MODEL || 'gpt-5.1-codex';
       return [{ id: defaultModel, name: defaultModel }];
     }
 
@@ -93,12 +93,12 @@ export async function fetchAvailableModels(): Promise<Array<{ id: string; name: 
 
     // 如果格式不符合预期，返回默认模型
     console.warn('[AI Provider] Unexpected API response format:', data);
-    const defaultModel = process.env.AI_MODEL || 'gpt-4o-mini';
+    const defaultModel = process.env.AI_MODEL || 'gpt-5.1-codex';
     return [{ id: defaultModel, name: defaultModel }];
   } catch (error) {
     console.error('[AI Provider] Error fetching models:', error);
     // 返回默认模型而不是抛出错误
-    const defaultModel = process.env.AI_MODEL || 'gpt-4o-mini';
+    const defaultModel = process.env.AI_MODEL || 'gpt-5.1-codex';
     return [{ id: defaultModel, name: defaultModel }];
   }
 }
@@ -123,7 +123,7 @@ export function getAIModel(modelId?: string): ModelConfig {
   const { baseURL, apiKey } = config;
 
   // 如果没有指定模型 ID，使用环境变量中的默认模型
-  const selectedModelId = modelId || process.env.AI_MODEL || 'gpt-4o-mini';
+  const selectedModelId = modelId || process.env.AI_MODEL || 'gpt-5.1-codex';
 
   // 检测应该使用哪个 provider
   const providerName = detectProvider(selectedModelId);
