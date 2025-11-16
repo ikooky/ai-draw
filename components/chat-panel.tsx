@@ -268,6 +268,7 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
                     error={error}
                     setInput={setInput}
                     setFiles={handleFileChange}
+                    isLoading={status === "streaming" || status === "submitted"}
                 />
             </CardContent>
 

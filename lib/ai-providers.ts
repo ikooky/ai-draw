@@ -1,10 +1,33 @@
 import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
-export type ProviderName = 'custom';
+export type ProviderName = 'openai' | 'anthropic' | 'google' | 'custom';
 
 interface ModelConfig {
   model: any;
   providerOptions?: any;
+  providerName: ProviderName;
+}
+
+/**
+ * 根据模型 ID 检测应该使用的 provider
+ */
+function detectProvider(modelId: string): ProviderName {
+  const lowerModelId = modelId.toLowerCase();
+
+  // Claude 模型使用 Anthropic provider
+  if (lowerModelId.includes('claude')) {
+    return 'anthropic';
+  }
+
+  // Gemini 模型使用 Google provider
+  if (lowerModelId.includes('gemini')) {
+    return 'google';
+  }
+
+  // DeepSeek、GPT 等使用 OpenAI 兼容 provider
+  return 'openai';
 }
 
 /**
@@ -88,15 +111,47 @@ export function getAIModel(modelId?: string): ModelConfig {
   // 如果没有指定模型 ID，使用环境变量中的默认模型
   const selectedModelId = modelId || process.env.AI_MODEL || 'gpt-3.5-turbo';
 
+  // 检测应该使用哪个 provider
+  const providerName = detectProvider(selectedModelId);
+
   console.log(`[AI Provider] Initializing model: ${selectedModelId}`);
+  console.log(`[AI Provider] Detected provider: ${providerName}`);
   console.log(`[AI Provider] Using API at ${baseURL}`);
 
-  const customOpenAI = createOpenAI({
-    baseURL,
-    apiKey,
-  });
+  let model: any;
 
-  const model = customOpenAI(selectedModelId);
+  switch (providerName) {
+    case 'anthropic': {
+      // 使用 Anthropic provider (Claude)
+      const anthropic = createAnthropic({
+        baseURL,
+        apiKey,
+      });
+      model = anthropic(selectedModelId);
+      break;
+    }
 
-  return { model, providerOptions: undefined };
+    case 'google': {
+      // 使用 Google Generative AI provider (Gemini)
+      const google = createGoogleGenerativeAI({
+        baseURL,
+        apiKey,
+      });
+      model = google(selectedModelId);
+      break;
+    }
+
+    case 'openai':
+    default: {
+      // 使用 OpenAI provider (GPT, DeepSeek, 等兼容 API)
+      const openai = createOpenAI({
+        baseURL,
+        apiKey,
+      });
+      model = openai(selectedModelId);
+      break;
+    }
+  }
+
+  return { model, providerOptions: undefined, providerName };
 }

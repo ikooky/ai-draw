@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import ExamplePanel from "./chat-example-panel";
 import { UIMessage } from "ai";
 import { convertToLegalXml, replaceNodes } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 import { useDiagram } from "@/contexts/diagram-context";
 
@@ -15,6 +16,7 @@ interface ChatMessageDisplayProps {
     error?: Error | null;
     setInput: (input: string) => void;
     setFiles: (files: File[]) => void;
+    isLoading?: boolean;
 }
 
 export function ChatMessageDisplay({
@@ -22,6 +24,7 @@ export function ChatMessageDisplay({
     error,
     setInput,
     setFiles,
+    isLoading = false,
 }: ChatMessageDisplayProps) {
     const { chartXML, loadDiagram: onDisplayChart } = useDiagram();
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -120,48 +123,72 @@ export function ChatMessageDisplay({
             }));
         };
 
+        // Get display names for tools
+        const toolDisplayNames: Record<string, string> = {
+            display_diagram: "生成图表",
+            edit_diagram: "编辑图表",
+        };
+
+        const displayName = toolDisplayNames[toolName || ""] || toolName;
+
         return (
             <div
                 key={callId}
-                className="p-4 my-2 text-gray-500 border border-gray-300 rounded"
+                className="p-3 my-2 border border-border/50 rounded-lg bg-card/50 backdrop-blur-sm"
             >
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
-                        <div className="text-xs">Tool: {toolName}</div>
+                        <div className="flex items-center gap-2 text-xs font-medium">
+                            {state === "input-streaming" ? (
+                                <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                            ) : state === "output-available" ? (
+                                <div className="h-3 w-3 rounded-full bg-green-500" />
+                            ) : state === "output-error" ? (
+                                <div className="h-3 w-3 rounded-full bg-red-500" />
+                            ) : null}
+                            <span className="text-muted-foreground">{displayName}</span>
+                        </div>
                         {input && Object.keys(input).length > 0 && (
                             <button
                                 onClick={toggleExpanded}
-                                className="text-xs text-gray-500 hover:text-gray-700"
+                                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                             >
-                                {isExpanded ? "Hide Args" : "Show Args"}
+                                {isExpanded ? "隐藏参数" : "显示参数"}
                             </button>
                         )}
                     </div>
                     {input && isExpanded && (
-                        <div className="mt-1 font-mono text-xs overflow-hidden">
+                        <div className="mt-1 font-mono text-xs overflow-hidden bg-muted/50 p-2 rounded border border-border/30 max-h-40 overflow-y-auto">
                             {typeof input === "object" &&
                                 Object.keys(input).length > 0 &&
-                                `Input: ${JSON.stringify(input, null, 2)}`}
+                                JSON.stringify(input, null, 2)}
                         </div>
                     )}
-                    <div className="mt-2 text-sm">
+                    <div className="text-xs">
                         {state === "input-streaming" ? (
-                            <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                            <div className="flex items-center gap-2 text-primary">
+                                <span className="animate-pulse">正在生成...</span>
+                            </div>
+                        ) : state === "input-available" ? (
+                            <div className="flex items-center gap-2 text-primary">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <span>执行中...</span>
+                            </div>
                         ) : state === "output-available" ? (
-                            <div className="text-green-600">
-                                {output || (toolName === "display_diagram"
-                                    ? "Diagram generated"
+                            <div className="text-green-600 font-medium">
+                                ✓ {output || (toolName === "display_diagram"
+                                    ? "图表已生成"
                                     : toolName === "edit_diagram"
-                                    ? "Diagram edited"
-                                    : "Tool executed")}
+                                    ? "图表已编辑"
+                                    : "执行成功")}
                             </div>
                         ) : state === "output-error" ? (
-                            <div className="text-red-600">
-                                {output || (toolName === "display_diagram"
-                                    ? "Error generating diagram"
+                            <div className="text-red-600 font-medium">
+                                ✗ {output || (toolName === "display_diagram"
+                                    ? "生成图表时出错"
                                     : toolName === "edit_diagram"
-                                    ? "Error editing diagram"
-                                    : "Tool error")}
+                                    ? "编辑图表时出错"
+                                    : "执行出错")}
                             </div>
                         ) : null}
                     </div>
@@ -175,51 +202,61 @@ export function ChatMessageDisplay({
             {messages.length === 0 ? (
                 <ExamplePanel setInput={setInput} setFiles={setFiles} />
             ) : (
-                messages.map((message) => (
-                    <div
-                        key={message.id}
-                        className={`mb-4 ${
-                            message.role === "user" ? "text-right" : "text-left"
-                        }`}
-                    >
+                <>
+                    {messages.map((message) => (
                         <div
-                            className={`inline-block px-4 py-2 whitespace-pre-wrap text-sm rounded-lg max-w-[85%] break-words ${
-                                message.role === "user"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted text-muted-foreground"
+                            key={message.id}
+                            className={`mb-4 ${
+                                message.role === "user" ? "text-right" : "text-left"
                             }`}
                         >
-                            {message.parts?.map((part: any, index: number) => {
-                                switch (part.type) {
-                                    case "text":
-                                        return (
-                                            <div key={index}>{part.text}</div>
-                                        );
-                                    case "file":
-                                        return (
-                                            <div key={index} className="mt-2">
-                                                <Image
-                                                    src={part.url}
-                                                    width={200}
-                                                    height={200}
-                                                    alt={`file-${index}`}
-                                                    className="rounded-md border"
-                                                    style={{
-                                                        objectFit: "contain",
-                                                    }}
-                                                />
-                                            </div>
-                                        );
-                                    default:
-                                        if (part.type?.startsWith("tool-")) {
-                                            return renderToolPart(part);
-                                        }
-                                        return null;
-                                }
-                            })}
+                            <div
+                                className={`inline-block px-4 py-2 whitespace-pre-wrap text-sm rounded-lg max-w-[85%] break-words ${
+                                    message.role === "user"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted text-muted-foreground"
+                                }`}
+                            >
+                                {message.parts?.map((part: any, index: number) => {
+                                    switch (part.type) {
+                                        case "text":
+                                            return (
+                                                <div key={index}>{part.text}</div>
+                                            );
+                                        case "file":
+                                            return (
+                                                <div key={index} className="mt-2">
+                                                    <Image
+                                                        src={part.url}
+                                                        width={200}
+                                                        height={200}
+                                                        alt={`file-${index}`}
+                                                        className="rounded-md border"
+                                                        style={{
+                                                            objectFit: "contain",
+                                                        }}
+                                                    />
+                                                </div>
+                                            );
+                                        default:
+                                            if (part.type?.startsWith("tool-")) {
+                                                return renderToolPart(part);
+                                            }
+                                            return null;
+                                    }
+                                })}
+                            </div>
                         </div>
-                    </div>
-                ))
+                    ))}
+                    {isLoading && (
+                        <div className="mb-4 text-left">
+                            <div className="inline-flex items-center gap-2 px-4 py-3 bg-muted text-muted-foreground rounded-lg">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span className="text-sm">AI 正在思考...</span>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
             {error && (
                 <div className="text-red-500 text-sm mt-2">
