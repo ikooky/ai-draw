@@ -23,14 +23,14 @@
    ```
    项目名称: ai-draw (或您喜欢的名称)
    生产分支: main
-   构建命令: npm run build
+   构建命令: npm run build && rm -rf .next/cache
    构建输出目录: .next
    根目录: / (留空)
    ```
 
    **重要提示**：
-   - Cloudflare Pages 会自动排除 `.next/cache` 目录
-   - 项目包含 `.cfignore` 文件来过滤不必要的文件
+   - 构建命令包含清理缓存步骤，避免超过 Cloudflare 25MB 文件限制
+   - 项目包含 `.cfignore` 文件来过滤不必要的源文件
 
 5. **高级设置**
    - Node.js 版本: `20`

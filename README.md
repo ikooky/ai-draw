@@ -65,7 +65,7 @@ Support for any OpenAI-compatible API service:
 3. Go to **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**
 4. Select your forked repository
 5. Configure build settings:
-   - Build command: `npm run build`
+   - Build command: `npm run build && rm -rf .next/cache`
    - Build output directory: `.next`
    - Environment variables: `CUSTOM_BASE_URL`, `CUSTOM_API_KEY`
 6. Deploy and access via `https://your-project.pages.dev`
