@@ -97,17 +97,12 @@ export function ModelSelector({ value, onValueChange }: ModelSelectorProps) {
       <Bot className="h-4 w-4 text-muted-foreground" />
       <Select value={value} onValueChange={onValueChange}>
         <SelectTrigger className="w-[200px] h-8">
-          <SelectValue placeholder="Select a model" />
+          <SelectValue placeholder="选择模型" />
         </SelectTrigger>
         <SelectContent>
           {models.map((model) => (
             <SelectItem key={model.id} value={model.id}>
-              <div className="flex flex-col">
-                <span className="font-medium">{model.name}</span>
-                <span className="text-xs text-muted-foreground truncate max-w-[180px]">
-                  {model.baseURL}
-                </span>
-              </div>
+              {model.name}
             </SelectItem>
           ))}
         </SelectContent>
