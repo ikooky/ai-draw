@@ -46,7 +46,47 @@ AI 驱动的 Draw.io 图表编辑器，通过自然语言创建和编辑专业�
 
 ## 🚀 快速开始
 
-### 方式一：Docker 部署（推荐）
+### 方式一：Vercel 部署
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fikooky%2Fai-draw)
+
+1. 点击上方按钮，使用 Vercel 一键部署
+2. 在 Vercel 项目设置中配置环境变量
+3. 部署完成后即可访问
+
+### 方式二：Cloudflare Pages 部署
+
+[![部署到 Cloudflare Pages](https://img.shields.io/badge/%E9%83%A8%E7%BD%B2%E5%88%B0-Cloudflare%20Pages-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://dash.cloudflare.com/sign-up/pages)
+
+**通过 GitHub 快速部署：**
+
+1. Fork 本仓库
+2. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
+3. 进入 **Workers & Pages** → **创建应用程序** → **Pages** → **连接到 Git**
+4. 选择您 fork 的仓库
+5. 配置构建设置：
+   - 构建命令：`npm run build`
+   - 构建输出目录：`.next`
+   - 环境变量：`CUSTOM_BASE_URL`、`CUSTOM_API_KEY`
+6. 部署后访问 `https://your-project.pages.dev`
+
+**或使用 Wrangler CLI 部署：**
+
+```bash
+# 安装 Wrangler
+npm install -g wrangler
+
+# 登录 Cloudflare
+wrangler login
+
+# 构建并部署
+npm run build
+wrangler pages deploy .next --project-name=ai-draw
+```
+
+📚 详细部署说明请查看 [Cloudflare 部署指南](CLOUDFLARE_DEPLOYMENT.md)
+
+### 方式三：Docker 部署
 
 #### 使用 Docker Compose
 
@@ -91,7 +131,7 @@ docker run -d \
 | `CUSTOM_API_KEY` | ✅ | API 密钥 | `sk-...` |
 | `PORT` | ❌ | 服务端口（默认：52996） | `52996` |
 
-### 方式二：本地开发
+### 方式四：本地开发
 
 #### 前置要求
 
@@ -138,46 +178,6 @@ npm run dev
 5. **访问应用**
 
 打开浏览器访问：http://localhost:6002
-
-### 方式三：Vercel 部署
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fikooky%2Fai-draw)
-
-1. 点击上方按钮，使用 Vercel 一键部署
-2. 在 Vercel 项目设置中配置环境变量
-3. 部署完成后即可访问
-
-### 方式四：Cloudflare Pages 部署
-
-[![部署到 Cloudflare Pages](https://img.shields.io/badge/%E9%83%A8%E7%BD%B2%E5%88%B0-Cloudflare%20Pages-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://dash.cloudflare.com/sign-up/pages)
-
-**通过 GitHub 快速部署：**
-
-1. Fork 本仓库
-2. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
-3. 进入 **Workers & Pages** → **创建应用程序** → **Pages** → **连接到 Git**
-4. 选择您 fork 的仓库
-5. 配置构建设置：
-   - 构建命令：`npm run build`
-   - 构建输出目录：`.next`
-   - 环境变量：`CUSTOM_BASE_URL`、`CUSTOM_API_KEY`
-6. 部署后访问 `https://your-project.pages.dev`
-
-**或使用 Wrangler CLI 部署：**
-
-```bash
-# 安装 Wrangler
-npm install -g wrangler
-
-# 登录 Cloudflare
-wrangler login
-
-# 构建并部署
-npm run build
-wrangler pages deploy .next --project-name=ai-draw
-```
-
-📚 详细部署说明请查看 [Cloudflare 部署指南](CLOUDFLARE_DEPLOYMENT.md)
 
 ---
 

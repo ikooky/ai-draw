@@ -46,7 +46,47 @@ Support for any OpenAI-compatible API service:
 
 ## 🚀 Quick Start
 
-### Option 1: Docker Deployment (Recommended)
+### Option 1: Vercel Deployment
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fikooky%2Fai-draw)
+
+1. Click the button above for one-click deployment with Vercel
+2. Configure environment variables in Vercel project settings
+3. Access after deployment is complete
+
+### Option 2: Cloudflare Pages Deployment
+
+[![Deploy to Cloudflare Pages](https://img.shields.io/badge/Deploy%20to-Cloudflare%20Pages-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://dash.cloudflare.com/sign-up/pages)
+
+**Quick Deployment via GitHub:**
+
+1. Fork this repository
+2. Log in to [Cloudflare Dashboard](https://dash.cloudflare.com/)
+3. Go to **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**
+4. Select your forked repository
+5. Configure build settings:
+   - Build command: `npm run build`
+   - Build output directory: `.next`
+   - Environment variables: `CUSTOM_BASE_URL`, `CUSTOM_API_KEY`
+6. Deploy and access via `https://your-project.pages.dev`
+
+**Or deploy via Wrangler CLI:**
+
+```bash
+# Install Wrangler
+npm install -g wrangler
+
+# Login to Cloudflare
+wrangler login
+
+# Build and deploy
+npm run build
+wrangler pages deploy .next --project-name=ai-draw
+```
+
+📚 For detailed deployment instructions, see [Cloudflare Deployment Guide](CLOUDFLARE_DEPLOYMENT.md)
+
+### Option 3: Docker Deployment
 
 #### Using Docker Compose
 
@@ -91,7 +131,7 @@ docker run -d \
 | `CUSTOM_API_KEY` | ✅ | API key | `sk-...` |
 | `PORT` | ❌ | Service port (default: 52996) | `52996` |
 
-### Option 2: Local Development
+### Option 4: Local Development
 
 #### Prerequisites
 
@@ -138,46 +178,6 @@ npm run dev
 5. **Access application**
 
 Open your browser and navigate to: http://localhost:6002
-
-### Option 3: Vercel Deployment
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fikooky%2Fai-draw)
-
-1. Click the button above for one-click deployment with Vercel
-2. Configure environment variables in Vercel project settings
-3. Access after deployment is complete
-
-### Option 4: Cloudflare Pages Deployment
-
-[![Deploy to Cloudflare Pages](https://img.shields.io/badge/Deploy%20to-Cloudflare%20Pages-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://dash.cloudflare.com/sign-up/pages)
-
-**Quick Deployment via GitHub:**
-
-1. Fork this repository
-2. Log in to [Cloudflare Dashboard](https://dash.cloudflare.com/)
-3. Go to **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**
-4. Select your forked repository
-5. Configure build settings:
-   - Build command: `npm run build`
-   - Build output directory: `.next`
-   - Environment variables: `CUSTOM_BASE_URL`, `CUSTOM_API_KEY`
-6. Deploy and access via `https://your-project.pages.dev`
-
-**Or deploy via Wrangler CLI:**
-
-```bash
-# Install Wrangler
-npm install -g wrangler
-
-# Login to Cloudflare
-wrangler login
-
-# Build and deploy
-npm run build
-wrangler pages deploy .next --project-name=ai-draw
-```
-
-📚 For detailed deployment instructions, see [Cloudflare Deployment Guide](CLOUDFLARE_DEPLOYMENT.md)
 
 ---
 
