@@ -37,18 +37,8 @@ export function getAPIConfig() {
   const baseURL = process.env.CUSTOM_BASE_URL;
   const apiKey = process.env.CUSTOM_API_KEY;
 
-  if (!baseURL) {
-    throw new Error(
-      `CUSTOM_BASE_URL environment variable is required. ` +
-      `Please set it in your .env.local file.`
-    );
-  }
-
-  if (!apiKey) {
-    throw new Error(
-      `CUSTOM_API_KEY environment variable is required. ` +
-      `Please set it in your .env.local file.`
-    );
+  if (!baseURL || !apiKey) {
+    return null; // 返回 null 而不是抛出错误
   }
 
   return { baseURL, apiKey };
@@ -58,7 +48,16 @@ export function getAPIConfig() {
  * 从 OpenAI 兼容 API 获取可用模型列表
  */
 export async function fetchAvailableModels(): Promise<Array<{ id: string; name: string }>> {
-  const { baseURL, apiKey } = getAPIConfig();
+  const config = getAPIConfig();
+
+  // 如果没有配置 API，返回默认模型列表
+  if (!config) {
+    console.log('[AI Provider] No API config found, using default model');
+    const defaultModel = process.env.AI_MODEL || 'gpt-4o-mini';
+    return [{ id: defaultModel, name: defaultModel }];
+  }
+
+  const { baseURL, apiKey } = config;
 
   try {
     // 调用 /models 端点获取模型列表
@@ -73,7 +72,10 @@ export async function fetchAvailableModels(): Promise<Array<{ id: string; name: 
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
+      console.warn(`[AI Provider] Failed to fetch models: ${response.status}`);
+      // 如果获取失败，返回默认模型
+      const defaultModel = process.env.AI_MODEL || 'gpt-4o-mini';
+      return [{ id: defaultModel, name: defaultModel }];
     }
 
     const data = await response.json();
@@ -89,13 +91,15 @@ export async function fetchAvailableModels(): Promise<Array<{ id: string; name: 
       return models;
     }
 
-    // 如果格式不符合预期，返回空数组
+    // 如果格式不符合预期，返回默认模型
     console.warn('[AI Provider] Unexpected API response format:', data);
-    return [];
+    const defaultModel = process.env.AI_MODEL || 'gpt-4o-mini';
+    return [{ id: defaultModel, name: defaultModel }];
   } catch (error) {
     console.error('[AI Provider] Error fetching models:', error);
-    // 直接抛出错误，不使用 fallback
-    throw error;
+    // 返回默认模型而不是抛出错误
+    const defaultModel = process.env.AI_MODEL || 'gpt-4o-mini';
+    return [{ id: defaultModel, name: defaultModel }];
   }
 }
 
@@ -104,10 +108,22 @@ export async function fetchAvailableModels(): Promise<Array<{ id: string; name: 
  * @param modelId 模型 ID，如果不提供则使用环境变量中的默认模型
  */
 export function getAIModel(modelId?: string): ModelConfig {
-  const { baseURL, apiKey } = getAPIConfig();
+  const config = getAPIConfig();
+
+  if (!config) {
+    throw new Error(
+      '请配置 API 信息。\n\n' +
+      '本地开发：在项目根目录创建 .env.local 文件，添加：\n' +
+      'CUSTOM_BASE_URL=https://api.openai.com/v1\n' +
+      'CUSTOM_API_KEY=your-api-key\n\n' +
+      'Cloudflare Pages：在 Dashboard → Settings → Environment variables 中添加上述变量'
+    );
+  }
+
+  const { baseURL, apiKey } = config;
 
   // 如果没有指定模型 ID，使用环境变量中的默认模型
-  const selectedModelId = modelId || process.env.AI_MODEL || 'gpt-3.5-turbo';
+  const selectedModelId = modelId || process.env.AI_MODEL || 'gpt-4o-mini';
 
   // 检测应该使用哪个 provider
   const providerName = detectProvider(selectedModelId);
