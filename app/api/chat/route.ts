@@ -115,12 +115,14 @@ ${lastMessageText}
 
     // Get AI model from environment configuration
     // If modelId is provided, use it; otherwise, use the default (first) model
-    const { model, providerOptions } = getAIModel(modelId);
+    const { model, providerOptions, providerName } = getAIModel(modelId);
 
     // 检测模型是否支持工具调用
-    // Claude 和 Gemini 通过 OpenAI 兼容接口可能不完全支持工具调用
-    const supportsTools = !modelId ||
-      (!modelId.includes('gemini') && !modelId.toLowerCase().includes('claude'));
+    // Anthropic (Claude) 和 Google (Gemini) 原生 SDK 都支持工具调用
+    // 只有通过 OpenAI 兼容接口时可能不支持
+    const supportsTools = providerName === 'anthropic' ||
+                         providerName === 'google' ||
+                         providerName === 'openai';
 
     const streamConfig: any = {
       model,
