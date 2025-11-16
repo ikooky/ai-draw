@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  ai-draw:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "52996:52996"
+    environment:
+      # AI 配置 - 必填
+      - AI_MODEL=${AI_MODEL:-gpt-4}
+      - CUSTOM_BASE_URL=${CUSTOM_BASE_URL:-https://api.openai.com/v1}
+      - CUSTOM_API_KEY=${CUSTOM_API_KEY}
+
+      # 端口配置
+      - PORT=52996
+      - HOSTNAME=0.0.0.0
+
+      # Next.js 配置
+      - NODE_ENV=production
+    restart: unless-stopped
+    # 可选：挂载本地目录用于持久化数据
+    # volumes:
+    #   - ./data:/app/data

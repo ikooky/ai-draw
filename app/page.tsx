@@ -1,0 +1,164 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { DrawIoEmbed } from "react-drawio";
+import ChatPanel from "@/components/chat-panel";
+import { useDiagram } from "@/contexts/diagram-context";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, FileEdit } from "lucide-react";
+
+type ViewMode = "diagram" | "chat";
+
+export default function Home() {
+    const { drawioRef, handleDiagramExport } = useDiagram();
+    const [isMobile, setIsMobile] = useState(false);
+    const [isTablet, setIsTablet] = useState(false);
+    const [isChatVisible, setIsChatVisible] = useState(true);
+    const [mobileView, setMobileView] = useState<ViewMode>("diagram");
+
+    useEffect(() => {
+        const checkScreenSize = () => {
+            const width = window.innerWidth;
+            setIsMobile(width < 768);
+            setIsTablet(width >= 768 && width < 1024);
+        };
+
+        // Check on mount
+        checkScreenSize();
+
+        // Add event listener for resize
+        window.addEventListener("resize", checkScreenSize);
+
+        // Cleanup
+        return () => window.removeEventListener("resize", checkScreenSize);
+    }, []);
+
+    // Add keyboard shortcut for toggling chat panel (Ctrl+B)
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'b') {
+                event.preventDefault();
+                setIsChatVisible((prev) => !prev);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, []);
+
+    // Mobile Layout: Single view with toggle buttons
+    if (isMobile) {
+        return (
+            <div className="flex flex-col h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+                {/* Mobile View Switcher */}
+                <div className="flex justify-center gap-2 p-3 bg-white/80 backdrop-blur-sm border-b border-slate-200 shadow-sm">
+                    <Button
+                        variant={mobileView === "diagram" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setMobileView("diagram")}
+                        className="flex-1 max-w-[160px] transition-all duration-200"
+                    >
+                        <FileEdit className="mr-2 h-4 w-4" />
+                        Diagram
+                    </Button>
+                    <Button
+                        variant={mobileView === "chat" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setMobileView("chat")}
+                        className="flex-1 max-w-[160px] transition-all duration-200"
+                    >
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Chat
+                    </Button>
+                </div>
+
+                {/* Content Area */}
+                <div className="flex-1 overflow-hidden p-1">
+                    {mobileView === "diagram" ? (
+                        <div className="h-full rounded-lg overflow-hidden shadow-lg">
+                            <DrawIoEmbed
+                                ref={drawioRef}
+                                onExport={handleDiagramExport}
+                                urlParameters={{
+                                    spin: true,
+                                    libraries: false,
+                                    saveAndExit: false,
+                                    noExitBtn: true,
+                                }}
+                            />
+                        </div>
+                    ) : (
+                        <ChatPanel
+                            isVisible={true}
+                            onToggleVisibility={() => setMobileView("diagram")}
+                            isMobileView={true}
+                        />
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // Tablet Layout: Vertical split
+    if (isTablet) {
+        return (
+            <div className="flex flex-col h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+                {/* Diagram Area - Top */}
+                <div className={`${isChatVisible ? 'h-1/2' : 'h-full'} p-2 transition-all duration-300 ease-in-out`}>
+                    <div className="h-full rounded-xl overflow-hidden shadow-lg">
+                        <DrawIoEmbed
+                            ref={drawioRef}
+                            onExport={handleDiagramExport}
+                            urlParameters={{
+                                spin: true,
+                                libraries: false,
+                                saveAndExit: false,
+                                noExitBtn: true,
+                            }}
+                        />
+                    </div>
+                </div>
+
+                {/* Chat Panel - Bottom */}
+                <div className={`${isChatVisible ? 'h-1/2' : 'h-16'} p-2 pt-0 transition-all duration-300 ease-in-out`}>
+                    <ChatPanel
+                        isVisible={isChatVisible}
+                        onToggleVisibility={() => setIsChatVisible(!isChatVisible)}
+                        isTabletView={true}
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    // Desktop Layout: Horizontal split
+    return (
+        <div className="flex h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50">
+            {/* Diagram Area - Left */}
+            <div className={`${isChatVisible ? 'w-2/3' : 'w-full'} p-2 h-full relative transition-all duration-300 ease-in-out`}>
+                <div className="h-full rounded-xl overflow-hidden shadow-xl">
+                    <DrawIoEmbed
+                        ref={drawioRef}
+                        onExport={handleDiagramExport}
+                        urlParameters={{
+                            spin: true,
+                            libraries: false,
+                            saveAndExit: false,
+                            noExitBtn: true,
+                        }}
+                    />
+                </div>
+            </div>
+
+            {/* Chat Panel - Right */}
+            <div className={`${isChatVisible ? 'w-1/3' : 'w-16'} h-full p-2 pl-0 transition-all duration-300 ease-in-out`}>
+                <ChatPanel
+                    isVisible={isChatVisible}
+                    onToggleVisibility={() => setIsChatVisible(!isChatVisible)}
+                />
+            </div>
+        </div>
+    );
+}
