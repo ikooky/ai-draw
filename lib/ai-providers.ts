@@ -94,10 +94,8 @@ export async function fetchAvailableModels(): Promise<Array<{ id: string; name: 
     return [];
   } catch (error) {
     console.error('[AI Provider] Error fetching models:', error);
-    // 如果获取失败，返回默认模型（从环境变量）
-    const defaultModel = process.env.AI_MODEL || 'gpt-3.5-turbo';
-    console.log(`[AI Provider] Using fallback model: ${defaultModel}`);
-    return [{ id: defaultModel, name: defaultModel }];
+    // 直接抛出错误，不使用 fallback
+    throw error;
   }
 }
 
