@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import ExamplePanel from "./chat-example-panel";
 import { UIMessage } from "ai";
 import { convertToLegalXml, replaceNodes } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight } from "lucide-react";
 
 import { useDiagram } from "@/contexts/diagram-context";
 
@@ -33,6 +33,7 @@ export function ChatMessageDisplay({
     const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>(
         {}
     );
+    const [thinkingExpanded, setThinkingExpanded] = useState<Record<string, boolean>>({});
     const handleDisplayChart = useCallback(
         (xml: string) => {
             const currentXml = xml || "";
@@ -238,6 +239,33 @@ export function ChatMessageDisplay({
                                                     />
                                                 </div>
                                             );
+                                        case "thinking":
+                                            const thinkingKey = `${message.id}-${index}`;
+                                            const isThinkingExpanded = thinkingExpanded[thinkingKey] ?? false;
+                                            return (
+                                                <div key={index} className="mt-2 border border-blue-200 rounded-lg bg-blue-50/50 overflow-hidden">
+                                                    <button
+                                                        onClick={() => setThinkingExpanded(prev => ({
+                                                            ...prev,
+                                                            [thinkingKey]: !isThinkingExpanded
+                                                        }))}
+                                                        className="w-full px-3 py-2 flex items-center gap-2 text-left text-xs text-blue-700 hover:bg-blue-100/50 transition-colors"
+                                                    >
+                                                        {isThinkingExpanded ? (
+                                                            <ChevronDown className="h-3 w-3" />
+                                                        ) : (
+                                                            <ChevronRight className="h-3 w-3" />
+                                                        )}
+                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                        <span className="font-medium">思考过程</span>
+                                                    </button>
+                                                    {isThinkingExpanded && part.text && (
+                                                        <div className="px-3 py-2 text-xs text-blue-800 whitespace-pre-wrap border-t border-blue-200 bg-blue-50/30 max-h-64 overflow-y-auto">
+                                                            {part.text}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
                                         default:
                                             if (part.type?.startsWith("tool-")) {
                                                 return renderToolPart(part);
@@ -250,9 +278,9 @@ export function ChatMessageDisplay({
                     ))}
                     {isLoading && (
                         <div className="mb-4 text-left">
-                            <div className="inline-flex items-center gap-2 px-4 py-3 bg-muted text-muted-foreground rounded-lg">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                <span className="text-sm">AI 正在思考...</span>
+                            <div className="inline-flex items-center gap-2 px-3 py-2 bg-muted text-muted-foreground rounded-lg">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <span className="text-xs">正在处理...</span>
                             </div>
                         </div>
                     )}

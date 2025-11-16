@@ -312,16 +312,23 @@ export function extractDiagramXML(xml_svg_string: string): string {
     const svgString = atob(xml_svg_string.slice(26));
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
+
+    // Check for parsing errors
+    const parserError = svgDoc.querySelector('parsererror');
+    if (parserError) {
+      throw new Error("上传的文件不是有效的 Draw.io 图表文件");
+    }
+
     const svgElement = svgDoc.querySelector('svg');
 
     if (!svgElement) {
-      throw new Error("No SVG element found in the input string.");
+      throw new Error("上传的文件不包含 SVG 图表数据");
     }
     // 2. Extract the 'content' attribute
     const encodedContent = svgElement.getAttribute('content');
 
     if (!encodedContent) {
-      throw new Error("SVG element does not have a 'content' attribute.");
+      throw new Error("文件中缺少图表内容数据，请确保上传的是 Draw.io 导出的文件");
     }
 
     // 3. Decode HTML entities (using a minimal function)
@@ -334,16 +341,23 @@ export function extractDiagramXML(xml_svg_string: string): string {
 
     // 4. Parse the XML content
     const xmlDoc = parser.parseFromString(xmlContent, "text/xml");
+
+    // Check for XML parsing errors
+    const xmlParserError = xmlDoc.querySelector('parsererror');
+    if (xmlParserError) {
+      throw new Error("图表数据格式不正确，可能已损坏");
+    }
+
     const diagramElement = xmlDoc.querySelector('diagram');
 
     if (!diagramElement) {
-      throw new Error("No diagram element found");
+      throw new Error("未找到有效的图表数据");
     }
     // 5. Extract base64 encoded data
     const base64EncodedData = diagramElement.textContent;
 
     if (!base64EncodedData) {
-      throw new Error("No encoded data found in the diagram element");
+      throw new Error("图表数据为空");
     }
 
     // 6. Decode base64 data
@@ -370,6 +384,17 @@ export function extractDiagramXML(xml_svg_string: string): string {
 
   } catch (error) {
     console.error("Error extracting diagram XML:", error);
-    throw error; // Re-throw for caller handling
+
+    // Provide user-friendly error messages
+    if (error instanceof Error) {
+      // If we already have a friendly error message, use it
+      if (error.message.includes("Draw.io") || error.message.includes("图表") || error.message.includes("文件")) {
+        throw error;
+      }
+      // Otherwise, provide a generic friendly message
+      throw new Error("无法从文件中提取图表数据。请确保上传的是 Draw.io 导出的 PNG/SVG 文件");
+    }
+
+    throw new Error("文件格式不支持，请上传 Draw.io 导出的图片文件");
   }
 }
