@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { DrawIoEmbed } from "react-drawio";
 import ChatPanel from "@/components/chat-panel";
 import { useDiagram } from "@/contexts/diagram-context";
@@ -53,36 +53,44 @@ export default function Home() {
         };
     }, []);
 
-    // Handle resizing
+    // Handle resizing with callbacks
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        e.preventDefault();
+        const newChatWidth = ((window.innerWidth - e.clientX) / window.innerWidth) * 100;
+        // Constrain between 20% and 60%
+        if (newChatWidth >= 20 && newChatWidth <= 60) {
+            setChatWidth(newChatWidth);
+        }
+    }, []);
+
+    const handleMouseUp = useCallback(() => {
+        setIsResizing(false);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        document.body.style.pointerEvents = '';
+    }, []);
+
+    const handleMouseDown = useCallback(() => {
+        setIsResizing(true);
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        document.body.style.pointerEvents = 'none';
+    }, []);
+
     useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (!isResizing) return;
-
-            const newChatWidth = ((window.innerWidth - e.clientX) / window.innerWidth) * 100;
-            // Constrain between 20% and 60%
-            if (newChatWidth >= 20 && newChatWidth <= 60) {
-                setChatWidth(newChatWidth);
-            }
-        };
-
-        const handleMouseUp = () => {
-            setIsResizing(false);
-        };
-
         if (isResizing) {
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
-            document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none';
+        } else {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
         }
 
         return () => {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
         };
-    }, [isResizing]);
+    }, [isResizing, handleMouseMove, handleMouseUp]);
 
     // Mobile Layout: Single view with toggle buttons
     if (isMobile) {
@@ -200,8 +208,9 @@ export default function Home() {
             {/* Resize Handle */}
             {isChatVisible && (
                 <div
-                    className="w-1 hover:w-1.5 bg-slate-300 hover:bg-blue-500 cursor-col-resize transition-all duration-200 flex-shrink-0 my-2 rounded-full"
-                    onMouseDown={() => setIsResizing(true)}
+                    className="w-1 hover:w-1.5 bg-slate-300 hover:bg-blue-500 cursor-col-resize flex-shrink-0 my-2 rounded-full active:bg-blue-600"
+                    onMouseDown={handleMouseDown}
+                    style={{ pointerEvents: 'auto' }}
                 />
             )}
 
