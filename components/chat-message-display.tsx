@@ -8,6 +8,7 @@ import ExamplePanel from "./chat-example-panel";
 import { UIMessage } from "ai";
 import { convertToLegalXml, replaceNodes } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import { ThinkingBlock } from "./thinking-block";
 
 import { useDiagram } from "@/contexts/diagram-context";
 
@@ -33,14 +34,46 @@ export function ChatMessageDisplay({
     const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>(
         {}
     );
+
+    // 提取思考内容的辅助函数
+    const getThinkingContent = useCallback((message: UIMessage): string | null => {
+        // 方法1: 检查 experimental_providerMetadata
+        const metadata = (message as any).experimental_providerMetadata;
+        if (metadata?.anthropic?.thinking) {
+            return metadata.anthropic.thinking;
+        }
+
+        // 方法2: 检查 parts 中的 thinking 类型
+        if (message.parts) {
+            for (const part of message.parts) {
+                if ((part as any).type === "thinking" && (part as any).text) {
+                    return (part as any).text;
+                }
+            }
+        }
+
+        return null;
+    }, []);
+
     const handleDisplayChart = useCallback(
         (xml: string) => {
             const currentXml = xml || "";
             const convertedXml = convertToLegalXml(currentXml);
             if (convertedXml !== previousXML.current) {
                 previousXML.current = convertedXml;
-                const replacedXML = replaceNodes(chartXML, convertedXml);
-                onDisplayChart(replacedXML);
+
+                // Use default empty diagram XML if chartXML is empty
+                const baseXML = chartXML ||
+                    `<mxfile><diagram name="Page-1" id="page-1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`;
+
+                try {
+                    const replacedXML = replaceNodes(baseXML, convertedXml);
+                    onDisplayChart(replacedXML);
+                } catch (error) {
+                    console.error('[ChatMessageDisplay] Error replacing nodes:', error);
+                    // If replaceNodes fails, try to display the converted XML directly
+                    onDisplayChart(convertedXml);
+                }
             }
         },
         [chartXML, onDisplayChart]
@@ -80,13 +113,19 @@ export function ChatMessageDisplay({
                             ) {
                                 handleDisplayChart(part.input.xml);
                             }
-                            // For completed calls, only update if not processed yet
+                            // For completed calls, process them
+                            // If chartXML is empty but we have a completed diagram, re-process it
                             else if (
-                                state === "output-available" &&
-                                !processedToolCalls.current.has(toolCallId)
+                                state === "output-available"
                             ) {
-                                handleDisplayChart(part.input.xml);
-                                processedToolCalls.current.add(toolCallId);
+                                const shouldProcess =
+                                    !processedToolCalls.current.has(toolCallId) ||
+                                    (!chartXML && part.input.xml); // Re-process if chart disappeared
+
+                                if (shouldProcess) {
+                                    handleDisplayChart(part.input.xml);
+                                    processedToolCalls.current.add(toolCallId);
+                                }
                             }
                         }
                     } else if (part.type === "text" && message.role === "assistant") {
@@ -108,7 +147,7 @@ export function ChatMessageDisplay({
                 });
             }
         });
-    }, [messages, handleDisplayChart]);
+    }, [messages, handleDisplayChart, chartXML]);
 
     const renderToolPart = (part: any) => {
         const callId = part.toolCallId;
@@ -210,6 +249,17 @@ export function ChatMessageDisplay({
                                 message.role === "user" ? "text-right" : "text-left"
                             }`}
                         >
+                            {/* 思考过程显示（如果有） */}
+                            {message.role === "assistant" && (() => {
+                                const thinkingContent = getThinkingContent(message);
+                                return thinkingContent ? (
+                                    <ThinkingBlock
+                                        content={thinkingContent}
+                                        messageId={message.id}
+                                    />
+                                ) : null;
+                            })()}
+
                             <div
                                 className={`inline-block px-4 py-2 whitespace-pre-wrap text-sm rounded-lg max-w-[85%] break-words ${
                                     message.role === "user"
@@ -238,6 +288,9 @@ export function ChatMessageDisplay({
                                                     />
                                                 </div>
                                             );
+                                        case "thinking":
+                                            // 思考内容已在上面统一处理，这里跳过
+                                            return null;
                                         default:
                                             if (part.type?.startsWith("tool-")) {
                                                 return renderToolPart(part);
@@ -248,14 +301,6 @@ export function ChatMessageDisplay({
                             </div>
                         </div>
                     ))}
-                    {isLoading && (
-                        <div className="mb-4 text-left">
-                            <div className="inline-flex items-center gap-2 px-4 py-3 bg-muted text-muted-foreground rounded-lg">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                <span className="text-sm">AI 正在思考...</span>
-                            </div>
-                        </div>
-                    )}
                 </>
             )}
             {error && (
