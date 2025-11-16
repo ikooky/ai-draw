@@ -7,101 +7,96 @@ interface ModelConfig {
   providerOptions?: any;
 }
 
-export interface AIModelOption {
-  id: string;
-  name: string;
-  baseURL: string;
-  apiKey: string;
-}
-
 /**
- * Parse AI models from environment variables
- * Supports both single model (legacy) and multiple models configuration
- *
- * Single model format (legacy):
- * AI_MODEL=gpt-4
- * CUSTOM_BASE_URL=https://api.openai.com/v1
- * CUSTOM_API_KEY=sk-xxx
- *
- * Multiple models format (JSON):
- * AI_MODELS=[
- *   {"id":"gpt-4","name":"GPT-4","baseURL":"https://api.openai.com/v1","apiKey":"sk-xxx"},
- *   {"id":"claude-3","name":"Claude 3","baseURL":"https://api.anthropic.com/v1","apiKey":"sk-xxx"}
- * ]
+ * 获取配置的 API 信息
  */
-export function getAvailableModels(): AIModelOption[] {
-  const modelsJson = process.env.AI_MODELS;
-
-  // Check if multiple models are configured
-  if (modelsJson) {
-    try {
-      const models = JSON.parse(modelsJson);
-      if (Array.isArray(models) && models.length > 0) {
-        // Validate each model has required fields
-        const validModels = models.filter(m =>
-          m.id && m.name && m.baseURL && m.apiKey
-        );
-
-        if (validModels.length > 0) {
-          console.log(`[AI Provider] Found ${validModels.length} configured models`);
-          return validModels;
-        }
-      }
-    } catch (error) {
-      console.error('[AI Provider] Failed to parse AI_MODELS:', error);
-    }
-  }
-
-  // Fall back to legacy single model configuration
-  const modelId = process.env.AI_MODEL;
+export function getAPIConfig() {
   const baseURL = process.env.CUSTOM_BASE_URL;
   const apiKey = process.env.CUSTOM_API_KEY;
 
-  if (modelId && baseURL && apiKey) {
-    console.log(`[AI Provider] Using legacy single model configuration: ${modelId}`);
-    return [{
-      id: modelId,
-      name: modelId,
-      baseURL,
-      apiKey
-    }];
-  }
-
-  throw new Error(
-    `No AI models configured. Please set either:\n` +
-    `1. AI_MODELS (JSON array) for multiple models, or\n` +
-    `2. AI_MODEL + CUSTOM_BASE_URL + CUSTOM_API_KEY for single model`
-  );
-}
-
-/**
- * Get the AI model based on model ID
- * If no modelId is provided, returns the first available model
- */
-export function getAIModel(modelId?: string): ModelConfig {
-  const availableModels = getAvailableModels();
-
-  // Find the requested model or use the first one
-  const selectedModel = modelId
-    ? availableModels.find(m => m.id === modelId)
-    : availableModels[0];
-
-  if (!selectedModel) {
+  if (!baseURL) {
     throw new Error(
-      `Model "${modelId}" not found. Available models: ${availableModels.map(m => m.id).join(', ')}`
+      `CUSTOM_BASE_URL environment variable is required. ` +
+      `Please set it in your .env.local file.`
     );
   }
 
-  // Log initialization for debugging
-  console.log(`[AI Provider] Initializing model: ${selectedModel.name} (${selectedModel.id})`);
-  console.log(`[AI Provider] Using API at ${selectedModel.baseURL}`);
+  if (!apiKey) {
+    throw new Error(
+      `CUSTOM_API_KEY environment variable is required. ` +
+      `Please set it in your .env.local file.`
+    );
+  }
+
+  return { baseURL, apiKey };
+}
+
+/**
+ * 从 OpenAI 兼容 API 获取可用模型列表
+ */
+export async function fetchAvailableModels(): Promise<Array<{ id: string; name: string }>> {
+  const { baseURL, apiKey } = getAPIConfig();
+
+  try {
+    // 调用 /models 端点获取模型列表
+    const modelsEndpoint = `${baseURL}/models`;
+    console.log(`[AI Provider] Fetching models from ${modelsEndpoint}`);
+
+    const response = await fetch(modelsEndpoint, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch models: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    // OpenAI API 格式: { "data": [{ "id": "model-id", ... }] }
+    if (data.data && Array.isArray(data.data)) {
+      const models = data.data.map((model: any) => ({
+        id: model.id,
+        name: model.id, // 使用 ID 作为显示名称
+      }));
+
+      console.log(`[AI Provider] Found ${models.length} models`);
+      return models;
+    }
+
+    // 如果格式不符合预期，返回空数组
+    console.warn('[AI Provider] Unexpected API response format:', data);
+    return [];
+  } catch (error) {
+    console.error('[AI Provider] Error fetching models:', error);
+    // 如果获取失败，返回默认模型（从环境变量）
+    const defaultModel = process.env.AI_MODEL || 'gpt-3.5-turbo';
+    console.log(`[AI Provider] Using fallback model: ${defaultModel}`);
+    return [{ id: defaultModel, name: defaultModel }];
+  }
+}
+
+/**
+ * 根据模型 ID 获取 AI 模型实例
+ * @param modelId 模型 ID，如果不提供则使用环境变量中的默认模型
+ */
+export function getAIModel(modelId?: string): ModelConfig {
+  const { baseURL, apiKey } = getAPIConfig();
+
+  // 如果没有指定模型 ID，使用环境变量中的默认模型
+  const selectedModelId = modelId || process.env.AI_MODEL || 'gpt-3.5-turbo';
+
+  console.log(`[AI Provider] Initializing model: ${selectedModelId}`);
+  console.log(`[AI Provider] Using API at ${baseURL}`);
 
   const customOpenAI = createOpenAI({
-    baseURL: selectedModel.baseURL,
-    apiKey: selectedModel.apiKey,
+    baseURL,
+    apiKey,
   });
 
-  const model = customOpenAI(selectedModel.id);
+  const model = customOpenAI(selectedModelId);
 
   return { model, providerOptions: undefined };
 }
