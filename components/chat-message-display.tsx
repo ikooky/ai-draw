@@ -7,7 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import ExamplePanel from "./chat-example-panel";
 import { UIMessage } from "ai";
 import { convertToLegalXml, replaceNodes } from "@/lib/utils";
-import { Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { ThinkingBlock } from "./thinking-block";
 
 import { useDiagram } from "@/contexts/diagram-context";
 
@@ -33,7 +34,27 @@ export function ChatMessageDisplay({
     const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>(
         {}
     );
-    const [thinkingExpanded, setThinkingExpanded] = useState<Record<string, boolean>>({});
+
+    // 提取思考内容的辅助函数
+    const getThinkingContent = useCallback((message: UIMessage): string | null => {
+        // 方法1: 检查 experimental_providerMetadata
+        const metadata = (message as any).experimental_providerMetadata;
+        if (metadata?.anthropic?.thinking) {
+            return metadata.anthropic.thinking;
+        }
+
+        // 方法2: 检查 parts 中的 thinking 类型
+        if (message.parts) {
+            for (const part of message.parts) {
+                if ((part as any).type === "thinking" && (part as any).text) {
+                    return (part as any).text;
+                }
+            }
+        }
+
+        return null;
+    }, []);
+
     const handleDisplayChart = useCallback(
         (xml: string) => {
             const currentXml = xml || "";
@@ -211,33 +232,16 @@ export function ChatMessageDisplay({
                                 message.role === "user" ? "text-right" : "text-left"
                             }`}
                         >
-                            {/* Display thinking content if available */}
-                            {message.role === "assistant" && (message as any).experimental_providerMetadata?.anthropic?.thinking && (
-                                <div className="mb-2 border border-blue-200 rounded-lg bg-blue-50/50 overflow-hidden max-w-[85%] inline-block">
-                                    <button
-                                        onClick={() => {
-                                            const thinkingKey = `thinking-${message.id}`;
-                                            setThinkingExpanded(prev => ({
-                                                ...prev,
-                                                [thinkingKey]: !prev[thinkingKey]
-                                            }));
-                                        }}
-                                        className="w-full px-3 py-2 flex items-center gap-2 text-left text-xs text-blue-700 hover:bg-blue-100/50 transition-colors"
-                                    >
-                                        {thinkingExpanded[`thinking-${message.id}`] ? (
-                                            <ChevronDown className="h-3 w-3" />
-                                        ) : (
-                                            <ChevronRight className="h-3 w-3" />
-                                        )}
-                                        <span className="font-medium">💭 思考过程</span>
-                                    </button>
-                                    {thinkingExpanded[`thinking-${message.id}`] && (
-                                        <div className="px-3 py-2 text-xs text-blue-800 whitespace-pre-wrap border-t border-blue-200 bg-blue-50/30 max-h-64 overflow-y-auto">
-                                            {(message as any).experimental_providerMetadata.anthropic.thinking}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                            {/* 思考过程显示（如果有） */}
+                            {message.role === "assistant" && (() => {
+                                const thinkingContent = getThinkingContent(message);
+                                return thinkingContent ? (
+                                    <ThinkingBlock
+                                        content={thinkingContent}
+                                        messageId={message.id}
+                                    />
+                                ) : null;
+                            })()}
 
                             <div
                                 className={`inline-block px-4 py-2 whitespace-pre-wrap text-sm rounded-lg max-w-[85%] break-words ${
@@ -268,32 +272,8 @@ export function ChatMessageDisplay({
                                                 </div>
                                             );
                                         case "thinking":
-                                            const thinkingKey = `${message.id}-${index}`;
-                                            const isThinkingExpanded = thinkingExpanded[thinkingKey] ?? false;
-                                            return (
-                                                <div key={index} className="mt-2 border border-blue-200 rounded-lg bg-blue-50/50 overflow-hidden">
-                                                    <button
-                                                        onClick={() => setThinkingExpanded(prev => ({
-                                                            ...prev,
-                                                            [thinkingKey]: !isThinkingExpanded
-                                                        }))}
-                                                        className="w-full px-3 py-2 flex items-center gap-2 text-left text-xs text-blue-700 hover:bg-blue-100/50 transition-colors"
-                                                    >
-                                                        {isThinkingExpanded ? (
-                                                            <ChevronDown className="h-3 w-3" />
-                                                        ) : (
-                                                            <ChevronRight className="h-3 w-3" />
-                                                        )}
-                                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                                        <span className="font-medium">思考过程</span>
-                                                    </button>
-                                                    {isThinkingExpanded && part.text && (
-                                                        <div className="px-3 py-2 text-xs text-blue-800 whitespace-pre-wrap border-t border-blue-200 bg-blue-50/30 max-h-64 overflow-y-auto">
-                                                            {part.text}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
+                                            // 思考内容已在上面统一处理，这里跳过
+                                            return null;
                                         default:
                                             if (part.type?.startsWith("tool-")) {
                                                 return renderToolPart(part);
