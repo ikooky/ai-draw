@@ -6,7 +6,7 @@ export const maxDuration = 300; // 5 minutes - allows longer AI generation sessi
 
 export async function POST(req: Request) {
   try {
-    const { messages, xml } = await req.json();
+    const { messages, xml, modelId } = await req.json();
 
     const systemMessage = `
 You are an expert diagram creation assistant specializing in draw.io XML generation.
@@ -120,7 +120,8 @@ ${lastMessageText}
     console.log("Enhanced messages:", enhancedMessages);
 
     // Get AI model from environment configuration
-    const { model, providerOptions } = getAIModel();
+    // If modelId is provided, use it; otherwise, use the default (first) model
+    const { model, providerOptions } = getAIModel(modelId);
 
     const result = streamText({
       model,
