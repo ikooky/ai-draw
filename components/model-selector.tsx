@@ -25,6 +25,7 @@ export function ModelSelector({ value, onValueChange }: ModelSelectorProps) {
   const [models, setModels] = useState<ModelOption[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
     fetchModels()
@@ -43,8 +44,9 @@ export function ModelSelector({ value, onValueChange }: ModelSelectorProps) {
       const data = await response.json()
       setModels(data.models || [])
 
-      // If no value is selected, select the first model
-      if (!value && data.models.length > 0 && onValueChange) {
+      // 只在首次加载且未选择模型时，自动选择第一个模型
+      if (!initialized && !value && data.models.length > 0 && onValueChange) {
+        setInitialized(true)
         onValueChange(data.models[0].id)
       }
     } catch (err) {
