@@ -2,6 +2,7 @@ import { streamText, convertToModelMessages } from 'ai';
 import { getAIModel } from '@/lib/ai-providers';
 import { z } from "zod";
 
+export const runtime = 'edge'; // Required for Cloudflare Pages
 export const maxDuration = 300; // 5 minutes - allows longer AI generation sessions
 
 export async function POST(req: Request) {

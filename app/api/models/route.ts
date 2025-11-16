@@ -1,5 +1,7 @@
 import { fetchAvailableModels, getAPIConfig } from '@/lib/ai-providers';
 
+export const runtime = 'edge'; // Required for Cloudflare Pages
+
 /**
  * GET /api/models
  * 从配置的 OpenAI 兼容 API 获取可用模型列表
