@@ -88,34 +88,28 @@ User input:
 ${lastMessageText}
 """`;
 
-    // Convert UIMessages to ModelMessages and add system message
-    const modelMessages = convertToModelMessages(messages);
-    let enhancedMessages = [...modelMessages];
+    // Convert UIMessages to ModelMessages
+    const modelMessages = convertToModelMessages(messages.slice(0, -1)); // All messages except the last one
 
-    // Update the last message with formatted content if it's a user message
-    if (enhancedMessages.length >= 1) {
-      const lastModelMessage = enhancedMessages[enhancedMessages.length - 1];
-      if (lastModelMessage.role === 'user') {
-        // Build content array with text and file parts
-        const contentParts: any[] = [
-          { type: 'text', text: formattedTextContent }
-        ];
+    // Build the last user message with XML context
+    const contentParts: any[] = [
+      { type: 'text', text: formattedTextContent }
+    ];
 
-        // Add image parts back
-        for (const filePart of fileParts) {
-          contentParts.push({
-            type: 'image',
-            image: filePart.url,
-            mimeType: filePart.mediaType
-          });
-        }
-
-        enhancedMessages = [
-          ...enhancedMessages.slice(0, -1),
-          { ...lastModelMessage, content: contentParts }
-        ];
-      }
+    // Add image parts to the last message
+    for (const filePart of fileParts) {
+      contentParts.push({
+        type: 'image',
+        image: filePart.url,
+        mimeType: filePart.mediaType
+      });
     }
+
+    // Construct final message array: history + current user message with context
+    const enhancedMessages = [
+      ...modelMessages,
+      { role: 'user' as const, content: contentParts }
+    ];
 
     console.log("Enhanced messages:", enhancedMessages);
 
