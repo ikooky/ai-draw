@@ -61,8 +61,19 @@ export function ChatMessageDisplay({
             const convertedXml = convertToLegalXml(currentXml);
             if (convertedXml !== previousXML.current) {
                 previousXML.current = convertedXml;
-                const replacedXML = replaceNodes(chartXML, convertedXml);
-                onDisplayChart(replacedXML);
+
+                // Use default empty diagram XML if chartXML is empty
+                const baseXML = chartXML ||
+                    `<mxfile><diagram name="Page-1" id="page-1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`;
+
+                try {
+                    const replacedXML = replaceNodes(baseXML, convertedXml);
+                    onDisplayChart(replacedXML);
+                } catch (error) {
+                    console.error('[ChatMessageDisplay] Error replacing nodes:', error);
+                    // If replaceNodes fails, try to display the converted XML directly
+                    onDisplayChart(convertedXml);
+                }
             }
         },
         [chartXML, onDisplayChart]
@@ -102,13 +113,19 @@ export function ChatMessageDisplay({
                             ) {
                                 handleDisplayChart(part.input.xml);
                             }
-                            // For completed calls, only update if not processed yet
+                            // For completed calls, process them
+                            // If chartXML is empty but we have a completed diagram, re-process it
                             else if (
-                                state === "output-available" &&
-                                !processedToolCalls.current.has(toolCallId)
+                                state === "output-available"
                             ) {
-                                handleDisplayChart(part.input.xml);
-                                processedToolCalls.current.add(toolCallId);
+                                const shouldProcess =
+                                    !processedToolCalls.current.has(toolCallId) ||
+                                    (!chartXML && part.input.xml); // Re-process if chart disappeared
+
+                                if (shouldProcess) {
+                                    handleDisplayChart(part.input.xml);
+                                    processedToolCalls.current.add(toolCallId);
+                                }
                             }
                         }
                     } else if (part.type === "text" && message.role === "assistant") {
@@ -130,7 +147,7 @@ export function ChatMessageDisplay({
                 });
             }
         });
-    }, [messages, handleDisplayChart]);
+    }, [messages, handleDisplayChart, chartXML]);
 
     const renderToolPart = (part: any) => {
         const callId = part.toolCallId;
