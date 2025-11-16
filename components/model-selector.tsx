@@ -44,16 +44,35 @@ export function ModelSelector({ value, onValueChange }: ModelSelectorProps) {
       const data = await response.json()
       setModels(data.models || [])
 
-      // 只在首次加载且未选择模型时，自动选择第一个模型
+      // 只在首次加载且未选择模型时，自动选择模型
       if (!initialized && !value && data.models.length > 0 && onValueChange) {
         setInitialized(true)
-        onValueChange(data.models[0].id)
+
+        // 优先使用 localStorage 中保存的模型
+        const savedModelId = localStorage.getItem('selectedModelId')
+        const savedModelExists = savedModelId && data.models.some((m: ModelOption) => m.id === savedModelId)
+
+        if (savedModelExists) {
+          onValueChange(savedModelId)
+        } else {
+          // 如果没有保存的模型或保存的模型不存在，使用第一个模型
+          onValueChange(data.models[0].id)
+        }
       }
     } catch (err) {
       console.error('Error fetching models:', err)
       setError(err instanceof Error ? err.message : 'Failed to load models')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleModelChange = (modelId: string) => {
+    // 保存到 localStorage
+    localStorage.setItem('selectedModelId', modelId)
+    // 调用父组件的 onValueChange
+    if (onValueChange) {
+      onValueChange(modelId)
     }
   }
 
@@ -97,7 +116,7 @@ export function ModelSelector({ value, onValueChange }: ModelSelectorProps) {
   return (
     <div className="flex items-center gap-2">
       <Bot className="h-4 w-4 text-muted-foreground" />
-      <Select value={value} onValueChange={onValueChange}>
+      <Select value={value} onValueChange={handleModelChange}>
         <SelectTrigger className="w-[200px] h-8">
           <SelectValue placeholder="选择模型" />
         </SelectTrigger>

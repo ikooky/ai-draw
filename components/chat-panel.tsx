@@ -55,8 +55,13 @@ export default function ChatPanel({ isVisible, onToggleVisibility, isMobileView 
     const [files, setFiles] = useState<File[]>([]);
     // Add state for showing the history dialog
     const [showHistory, setShowHistory] = useState(false);
-    // Add state for selected model
-    const [selectedModel, setSelectedModel] = useState<string | undefined>(undefined);
+    // Add state for selected model - initialize from localStorage
+    const [selectedModel, setSelectedModel] = useState<string | undefined>(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('selectedModelId') || undefined;
+        }
+        return undefined;
+    });
 
     // Convert File[] to FileList for experimental_attachments
     const createFileList = (files: File[]): FileList => {
