@@ -15,6 +15,9 @@ export default function Home() {
     const [isChatVisible, setIsChatVisible] = useState(true);
     const [mobileView, setMobileView] = useState<ViewMode>("diagram");
 
+    // 定义一个有效的初始 XML，避免解析错误
+    const initialXML = `<mxfile><diagram name="Page-1" id="page-1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`;
+
     useEffect(() => {
         const checkScreenSize = () => {
             const width = window.innerWidth;
@@ -81,6 +84,7 @@ export default function Home() {
                             <DrawIoEmbed
                                 ref={drawioRef}
                                 onExport={handleDiagramExport}
+                                xml={initialXML}
                                 urlParameters={{
                                     spin: true,
                                     libraries: false,
@@ -111,6 +115,7 @@ export default function Home() {
                         <DrawIoEmbed
                             ref={drawioRef}
                             onExport={handleDiagramExport}
+                            xml={initialXML}
                             urlParameters={{
                                 spin: true,
                                 libraries: false,
@@ -142,6 +147,7 @@ export default function Home() {
                     <DrawIoEmbed
                         ref={drawioRef}
                         onExport={handleDiagramExport}
+                        xml={initialXML}
                         urlParameters={{
                             spin: true,
                             libraries: false,

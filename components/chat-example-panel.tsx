@@ -7,7 +7,7 @@ export default function ExamplePanel({
 }) {
     // New handler for the "Replicate this flowchart" button
     const handleReplicateFlowchart = async () => {
-        setInput("Replicate this flowchart.");
+        setInput("复制这个流程图");
 
         try {
             // Fetch the example image
@@ -24,7 +24,7 @@ export default function ExamplePanel({
 
     // Handler for the "Replicate this in aws style" button
     const handleReplicateArchitecture = async () => {
-        setInput("Replicate this in aws style");
+        setInput("用 AWS 风格复制这个图表");
 
         try {
             // Fetch the architecture image
@@ -43,32 +43,30 @@ export default function ExamplePanel({
     return (
         <div className="px-4 py-2 border-t border-b border-gray-100">
             <p className="text-sm text-gray-500 mb-2">
-                {" "}
-                Start a conversation to generate or modify diagrams.
+                开始对话以生成或修改图表
             </p>
             <p className="text-sm text-gray-500 mb-2">
-                {" "}
-                You can also upload images to use as references.
+                你也可以上传图片作为参考
             </p>
-            <p className="text-sm text-gray-500 mb-2">Try these examples:</p>
+            <p className="text-sm text-gray-500 mb-2">试试这些例子：</p>
             <div className="flex flex-wrap gap-5">
                 <button
                     className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-1 px-2 rounded"
                     onClick={handleReplicateArchitecture}
                 >
-                    Create this diagram in aws style
+                    用 AWS 风格创建此图表
                 </button>
                 <button
                     className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-1 px-2 rounded"
                     onClick={handleReplicateFlowchart}
                 >
-                    Replicate this flowchart
+                    复制这个流程图
                 </button>
                 <button
                     className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-1 px-2 rounded"
-                    onClick={() => setInput("Draw a cat for me")}
+                    onClick={() => setInput("给我画一只猫")}
                 >
-                    Draw a cat for me
+                    给我画一只猫
                 </button>
             </div>
         </div>

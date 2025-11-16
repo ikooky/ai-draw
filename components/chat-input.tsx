@@ -15,6 +15,7 @@ import { ButtonWithTooltip } from "@/components/button-with-tooltip";
 import { FilePreviewList } from "./file-preview-list";
 import { useDiagram } from "@/contexts/diagram-context";
 import { HistoryDialog } from "@/components/history-dialog";
+import { ModelSelector } from "@/components/model-selector";
 
 interface ChatInputProps {
     input: string;
@@ -26,6 +27,8 @@ interface ChatInputProps {
     onFileChange?: (files: File[]) => void;
     showHistory?: boolean;
     onToggleHistory?: (show: boolean) => void;
+    selectedModel?: string;
+    onModelChange?: (model: string) => void;
 }
 
 export function ChatInput({
@@ -38,6 +41,8 @@ export function ChatInput({
     onFileChange = () => {},
     showHistory = false,
     onToggleHistory = () => {},
+    selectedModel,
+    onModelChange,
 }: ChatInputProps) {
     const { diagramHistory } = useDiagram();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -187,9 +192,7 @@ export function ChatInput({
                 onChange={onChange}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
-                placeholder="Describe what changes you want to make to the diagram
-                or upload(paste) an image to replicate a diagram.
-                 (Press Enter to send, Shift+Enter for new line)"
+                placeholder="描述你想要对图表做的修改，或上传（粘贴）图片来复制图表。（按 Enter 发送，Shift+Enter 换行）"
                 disabled={isDisabled}
                 aria-label="Chat input"
                 className="min-h-[80px] resize-none transition-all duration-200 px-1 py-0"
@@ -202,7 +205,7 @@ export function ChatInput({
                         variant="ghost"
                         size="icon"
                         onClick={() => setShowClearDialog(true)}
-                        tooltipContent="Clear current conversation and diagram"
+                        tooltipContent="清空当前对话和图表"
                     >
                         <RotateCcw className="mr-2 h-4 w-4" />
                     </ButtonWithTooltip>
@@ -230,8 +233,8 @@ export function ChatInput({
                             isDisabled ||
                             diagramHistory.length === 0
                         }
-                        title="Diagram History"
-                        tooltipContent="View diagram history"
+                        title="图表历史"
+                        tooltipContent="查看图表历史"
                     >
                         <History className="h-4 w-4" />
                     </ButtonWithTooltip>
@@ -242,7 +245,7 @@ export function ChatInput({
                         size="icon"
                         onClick={triggerFileInput}
                         disabled={isDisabled}
-                        title="Upload image"
+                        title="上传图片"
                     >
                         <ImageIcon className="h-4 w-4" />
                     </Button>
@@ -258,14 +261,19 @@ export function ChatInput({
                     />
                 </div>
 
+                <ModelSelector
+                    value={selectedModel}
+                    onValueChange={onModelChange}
+                />
+
                 <Button
                     type="submit"
                     disabled={isDisabled || !input.trim()}
                     className="transition-opacity"
                     aria-label={
                         isDisabled
-                            ? "Sending message..."
-                            : "Send message"
+                            ? "发送中..."
+                            : "发送消息"
                     }
                 >
                     {isDisabled ? (
@@ -273,7 +281,7 @@ export function ChatInput({
                     ) : (
                         <Send className="mr-2 h-4 w-4" />
                     )}
-                    Send
+                    发送
                 </Button>
             </div>
         </form>

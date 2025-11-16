@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useRef, useState } from "react";
+import React, { createContext, useContext, useRef, useState, useEffect } from "react";
 import type { DrawIoEmbedRef } from "react-drawio";
 import { extractDiagramXML } from "../lib/utils";
 
@@ -27,6 +27,34 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
     const drawioRef = useRef<DrawIoEmbedRef | null>(null);
     const resolverRef = useRef<((value: string) => void) | null>(null);
 
+    // 应用启动时自动清理可能损坏的缓存数据
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                // 清理可能导致 XML 解析错误的损坏数据
+                const keysToCheck = Object.keys(localStorage);
+                keysToCheck.forEach(key => {
+                    // 清理可能与 Draw.io 相关的损坏缓存
+                    if (key.includes('drawio') || key.includes('diagram') || key.includes('mxfile')) {
+                        try {
+                            const value = localStorage.getItem(key);
+                            // 尝试解析，如果失败则删除
+                            if (value && value.includes('&') && !value.includes('&amp;')) {
+                                console.log(`[DiagramContext] Cleaning potentially corrupted cache: ${key}`);
+                                localStorage.removeItem(key);
+                            }
+                        } catch (e) {
+                            // 如果有任何错误，删除该项
+                            localStorage.removeItem(key);
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error('[DiagramContext] Error cleaning cache:', e);
+            }
+        }
+    }, []);
+
     const handleExport = () => {
         if (drawioRef.current) {
             drawioRef.current.exportDiagram({
@@ -44,19 +72,34 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
     };
 
     const handleDiagramExport = (data: any) => {
-        const extractedXML = extractDiagramXML(data.data);
-        setChartXML(extractedXML);
-        setLatestSvg(data.data);
-        setDiagramHistory((prev) => [
-            ...prev,
-            {
-                svg: data.data,
-                xml: extractedXML,
-            },
-        ]);
-        if (resolverRef.current) {
-            resolverRef.current(extractedXML);
-            resolverRef.current = null;
+        try {
+            const extractedXML = extractDiagramXML(data.data);
+
+            // 验证 XML 是否有效（简单检查特殊字符）
+            if (extractedXML && !extractedXML.includes('xmlParseEntityRef')) {
+                setChartXML(extractedXML);
+                setLatestSvg(data.data);
+                setDiagramHistory((prev) => [
+                    ...prev,
+                    {
+                        svg: data.data,
+                        xml: extractedXML,
+                    },
+                ]);
+            }
+
+            if (resolverRef.current) {
+                resolverRef.current(extractedXML);
+                resolverRef.current = null;
+            }
+        } catch (error) {
+            console.error('[DiagramContext] Error exporting diagram:', error);
+            // 发生错误时返回空的有效 XML
+            if (resolverRef.current) {
+                const emptyDiagram = `<mxfile><diagram name="Page-1" id="page-1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`;
+                resolverRef.current(emptyDiagram);
+                resolverRef.current = null;
+            }
         }
     };
 

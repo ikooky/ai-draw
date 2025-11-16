@@ -19,7 +19,6 @@ import { ChatMessageDisplay } from "./chat-message-display";
 import { useDiagram } from "@/contexts/diagram-context";
 import { replaceNodes, formatXML } from "@/lib/utils";
 import { ButtonWithTooltip } from "@/components/button-with-tooltip";
-import { ModelSelector } from "@/components/model-selector";
 
 interface ChatPanelProps {
     isVisible: boolean;
@@ -232,37 +231,31 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
     // Full view when chat is visible
     return (
         <Card className={`h-full flex flex-col ${isMobileView ? 'rounded-lg' : isTabletView ? 'rounded-xl' : 'rounded-xl'} py-0 gap-0 shadow-xl border-border/50 overflow-hidden`}>
-            <CardHeader className="p-4 flex flex-col gap-3 border-b border-border/50 bg-card/95 backdrop-blur-sm">
-                <div className="flex flex-row justify-between items-center">
-                    <CardTitle className="text-lg font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                        AI Draw
-                    </CardTitle>
-                    <div className="flex items-center gap-2">
-                        {!isMobileView && (
-                            <ButtonWithTooltip
-                                tooltipContent={`Hide chat panel ${isTabletView ? '' : '(Ctrl+B)'}`}
-                                variant="ghost"
-                                size="icon"
-                                onClick={onToggleVisibility}
-                                className="hover:bg-primary/10 transition-colors"
-                            >
-                                <PanelRightClose className="h-5 w-5" />
-                            </ButtonWithTooltip>
-                        )}
-                        <a
-                            href="https://github.com/ikooky/ai-draw"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-primary transition-colors duration-200"
+            <CardHeader className="p-4 flex flex-row justify-between items-center border-b border-border/50 bg-card/95 backdrop-blur-sm">
+                <CardTitle className="text-lg font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    AI Draw
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                    {!isMobileView && (
+                        <ButtonWithTooltip
+                            tooltipContent={`Hide chat panel ${isTabletView ? '' : '(Ctrl+B)'}`}
+                            variant="ghost"
+                            size="icon"
+                            onClick={onToggleVisibility}
+                            className="hover:bg-primary/10 transition-colors"
                         >
-                            <FaGithub className="w-5 h-5" />
-                        </a>
-                    </div>
+                            <PanelRightClose className="h-5 w-5" />
+                        </ButtonWithTooltip>
+                    )}
+                    <a
+                        href="https://github.com/ikooky/ai-draw"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-primary transition-colors duration-200"
+                    >
+                        <FaGithub className="w-5 h-5" />
+                    </a>
                 </div>
-                <ModelSelector
-                    value={selectedModel}
-                    onValueChange={setSelectedModel}
-                />
             </CardHeader>
             <CardContent className="flex-grow overflow-hidden px-2 bg-gradient-to-b from-card/50 to-card">
                 <ChatMessageDisplay
@@ -287,6 +280,8 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
                     onFileChange={handleFileChange}
                     showHistory={showHistory}
                     onToggleHistory={setShowHistory}
+                    selectedModel={selectedModel}
+                    onModelChange={setSelectedModel}
                 />
             </CardFooter>
         </Card>
