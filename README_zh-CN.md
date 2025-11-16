@@ -65,9 +65,9 @@ AI 驱动的 Draw.io 图表编辑器，通过自然语言创建和编辑专业�
 3. 进入 **Workers & Pages** → **创建应用程序** → **Pages** → **连接到 Git**
 4. 选择您 fork 的仓库
 5. 配置构建设置：
-   - 构建命令：`npx @cloudflare/next-on-pages`
+   - 构建命令：`CLOUDFLARE=true npx @cloudflare/next-on-pages`
    - 构建输出目录：`.vercel/output/static`
-   - 环境变量：`CUSTOM_BASE_URL`、`CUSTOM_API_KEY`
+   - 环境变量（Production）：`CUSTOM_BASE_URL`、`CUSTOM_API_KEY`、`CLOUDFLARE=true`
    - Node.js 版本：`18` 或更高
 6. 部署后访问 `https://your-project.pages.dev`
 

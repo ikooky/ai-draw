@@ -12,7 +12,7 @@ fi
 
 # 构建项目
 echo "🔨 构建项目..."
-npx @cloudflare/next-on-pages
+CLOUDFLARE=true npx @cloudflare/next-on-pages
 
 # 部署到 Cloudflare Pages
 echo "☁️ 部署到 Cloudflare Pages..."

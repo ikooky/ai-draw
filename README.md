@@ -65,9 +65,9 @@ Support for any OpenAI-compatible API service:
 3. Go to **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**
 4. Select your forked repository
 5. Configure build settings:
-   - Build command: `npx @cloudflare/next-on-pages`
+   - Build command: `CLOUDFLARE=true npx @cloudflare/next-on-pages`
    - Build output directory: `.vercel/output/static`
-   - Environment variables: `CUSTOM_BASE_URL`, `CUSTOM_API_KEY`
+   - Environment variables (Production): `CUSTOM_BASE_URL`, `CUSTOM_API_KEY`, `CLOUDFLARE=true`
    - Node.js version: `18` or higher
 6. Deploy and access via `https://your-project.pages.dev`
 
