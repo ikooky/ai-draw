@@ -14,6 +14,8 @@ export default function Home() {
     const [isTablet, setIsTablet] = useState(false);
     const [isChatVisible, setIsChatVisible] = useState(true);
     const [mobileView, setMobileView] = useState<ViewMode>("diagram");
+    const [chatWidth, setChatWidth] = useState(33); // Chat panel width in percentage (default 33%)
+    const [isResizing, setIsResizing] = useState(false);
 
     // 定义一个有效的初始 XML，避免解析错误
     const initialXML = `<mxfile><diagram name="Page-1" id="page-1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`;
@@ -50,6 +52,37 @@ export default function Home() {
             window.removeEventListener('keydown', handleKeyDown);
         };
     }, []);
+
+    // Handle resizing
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!isResizing) return;
+
+            const newChatWidth = ((window.innerWidth - e.clientX) / window.innerWidth) * 100;
+            // Constrain between 20% and 60%
+            if (newChatWidth >= 20 && newChatWidth <= 60) {
+                setChatWidth(newChatWidth);
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsResizing(false);
+        };
+
+        if (isResizing) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        };
+    }, [isResizing]);
 
     // Mobile Layout: Single view with toggle buttons
     if (isMobile) {
@@ -138,11 +171,17 @@ export default function Home() {
         );
     }
 
-    // Desktop Layout: Horizontal split
+    // Desktop Layout: Horizontal split with resizable divider
     return (
         <div className="flex h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50">
             {/* Diagram Area - Left */}
-            <div className={`${isChatVisible ? 'w-2/3' : 'w-full'} p-2 h-full relative transition-all duration-300 ease-in-out`}>
+            <div
+                className="p-2 h-full relative"
+                style={{
+                    width: isChatVisible ? `${100 - chatWidth}%` : 'calc(100% - 4rem)',
+                    transition: isResizing ? 'none' : 'width 300ms ease-in-out'
+                }}
+            >
                 <div className="h-full rounded-xl overflow-hidden shadow-xl">
                     <DrawIoEmbed
                         ref={drawioRef}
@@ -158,8 +197,22 @@ export default function Home() {
                 </div>
             </div>
 
+            {/* Resize Handle */}
+            {isChatVisible && (
+                <div
+                    className="w-1 hover:w-1.5 bg-slate-300 hover:bg-blue-500 cursor-col-resize transition-all duration-200 flex-shrink-0 my-2 rounded-full"
+                    onMouseDown={() => setIsResizing(true)}
+                />
+            )}
+
             {/* Chat Panel - Right */}
-            <div className={`${isChatVisible ? 'w-1/3' : 'w-16'} h-full p-2 pl-0 transition-all duration-300 ease-in-out`}>
+            <div
+                className="h-full p-2 pl-0"
+                style={{
+                    width: isChatVisible ? `${chatWidth}%` : '4rem',
+                    transition: isResizing ? 'none' : 'width 300ms ease-in-out'
+                }}
+            >
                 <ChatPanel
                     isVisible={isChatVisible}
                     onToggleVisibility={() => setIsChatVisible(!isChatVisible)}

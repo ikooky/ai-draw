@@ -211,6 +211,34 @@ export function ChatMessageDisplay({
                                 message.role === "user" ? "text-right" : "text-left"
                             }`}
                         >
+                            {/* Display thinking content if available */}
+                            {message.role === "assistant" && (message as any).experimental_providerMetadata?.anthropic?.thinking && (
+                                <div className="mb-2 border border-blue-200 rounded-lg bg-blue-50/50 overflow-hidden max-w-[85%] inline-block">
+                                    <button
+                                        onClick={() => {
+                                            const thinkingKey = `thinking-${message.id}`;
+                                            setThinkingExpanded(prev => ({
+                                                ...prev,
+                                                [thinkingKey]: !prev[thinkingKey]
+                                            }));
+                                        }}
+                                        className="w-full px-3 py-2 flex items-center gap-2 text-left text-xs text-blue-700 hover:bg-blue-100/50 transition-colors"
+                                    >
+                                        {thinkingExpanded[`thinking-${message.id}`] ? (
+                                            <ChevronDown className="h-3 w-3" />
+                                        ) : (
+                                            <ChevronRight className="h-3 w-3" />
+                                        )}
+                                        <span className="font-medium">💭 思考过程</span>
+                                    </button>
+                                    {thinkingExpanded[`thinking-${message.id}`] && (
+                                        <div className="px-3 py-2 text-xs text-blue-800 whitespace-pre-wrap border-t border-blue-200 bg-blue-50/30 max-h-64 overflow-y-auto">
+                                            {(message as any).experimental_providerMetadata.anthropic.thinking}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             <div
                                 className={`inline-block px-4 py-2 whitespace-pre-wrap text-sm rounded-lg max-w-[85%] break-words ${
                                     message.role === "user"
@@ -276,14 +304,6 @@ export function ChatMessageDisplay({
                             </div>
                         </div>
                     ))}
-                    {isLoading && (
-                        <div className="mb-4 text-left">
-                            <div className="inline-flex items-center gap-2 px-3 py-2 bg-muted text-muted-foreground rounded-lg">
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                                <span className="text-xs">正在处理...</span>
-                            </div>
-                        </div>
-                    )}
                 </>
             )}
             {error && (
