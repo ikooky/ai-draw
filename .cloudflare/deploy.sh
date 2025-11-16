@@ -14,6 +14,10 @@ fi
 echo "🔨 构建项目..."
 npm run build
 
+# 清理缓存文件（Cloudflare Pages 限制单个文件最大 25MB）
+echo "🧹 清理构建缓存..."
+rm -rf .next/cache
+
 # 部署到 Cloudflare Pages
 echo "☁️ 部署到 Cloudflare Pages..."
 wrangler pages deploy .next --project-name=ai-draw

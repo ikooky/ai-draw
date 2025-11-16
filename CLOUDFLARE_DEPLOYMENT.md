@@ -28,6 +28,10 @@
    根目录: / (留空)
    ```
 
+   **重要提示**：
+   - Cloudflare Pages 会自动排除 `.next/cache` 目录
+   - 项目包含 `.cfignore` 文件来过滤不必要的文件
+
 5. **高级设置**
    - Node.js 版本: `20`
    - 环境变量（见下方）
@@ -92,6 +96,9 @@
    ```bash
    npm install
    npm run build
+
+   # 清理缓存（Cloudflare Pages 限制单文件 25MB）
+   rm -rf .next/cache
    ```
 
 5. **部署**
@@ -99,7 +106,7 @@
    wrangler pages deploy .next --project-name=ai-draw
    ```
 
-   或使用快捷脚本：
+   或使用快捷脚本（自动清理缓存）：
    ```bash
    chmod +x .cloudflare/deploy.sh
    ./.cloudflare/deploy.sh

@@ -32,6 +32,9 @@ jobs:
           # Build-time environment variables (if needed)
           NODE_ENV: production
 
+      - name: Clean cache
+        run: rm -rf .next/cache
+
       - name: Publish to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
