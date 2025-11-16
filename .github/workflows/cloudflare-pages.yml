@@ -27,13 +27,10 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: npx @cloudflare/next-on-pages
         env:
           # Build-time environment variables (if needed)
           NODE_ENV: production
-
-      - name: Clean cache
-        run: rm -rf .next/cache
 
       - name: Publish to Cloudflare Pages
         uses: cloudflare/pages-action@v1
@@ -41,7 +38,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: ai-draw
-          directory: .next
+          directory: .vercel/output/static
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           # Cloudflare Pages automatically handles environment variables
           # Configure them in Cloudflare Dashboard: Settings -> Environment variables

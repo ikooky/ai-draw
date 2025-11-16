@@ -65,9 +65,10 @@ Support for any OpenAI-compatible API service:
 3. Go to **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**
 4. Select your forked repository
 5. Configure build settings:
-   - Build command: `npm run build && rm -rf .next/cache`
-   - Build output directory: `.next`
+   - Build command: `npx @cloudflare/next-on-pages`
+   - Build output directory: `.vercel/output/static`
    - Environment variables: `CUSTOM_BASE_URL`, `CUSTOM_API_KEY`
+   - Node.js version: `18` or higher
 6. Deploy and access via `https://your-project.pages.dev`
 
 **Or deploy via Wrangler CLI:**
@@ -80,11 +81,9 @@ npm install -g wrangler
 wrangler login
 
 # Build and deploy
-npm run build
-wrangler pages deploy .next --project-name=ai-draw
+npx @cloudflare/next-on-pages
+wrangler pages deploy .vercel/output/static --project-name=ai-draw
 ```
-
-📚 For detailed deployment instructions, see [Cloudflare Deployment Guide](CLOUDFLARE_DEPLOYMENT.md)
 
 ### Option 3: Docker Deployment
 

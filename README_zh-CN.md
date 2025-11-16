@@ -65,9 +65,10 @@ AI 驱动的 Draw.io 图表编辑器，通过自然语言创建和编辑专业�
 3. 进入 **Workers & Pages** → **创建应用程序** → **Pages** → **连接到 Git**
 4. 选择您 fork 的仓库
 5. 配置构建设置：
-   - 构建命令：`npm run build && rm -rf .next/cache`
-   - 构建输出目录：`.next`
+   - 构建命令：`npx @cloudflare/next-on-pages`
+   - 构建输出目录：`.vercel/output/static`
    - 环境变量：`CUSTOM_BASE_URL`、`CUSTOM_API_KEY`
+   - Node.js 版本：`18` 或更高
 6. 部署后访问 `https://your-project.pages.dev`
 
 **或使用 Wrangler CLI 部署：**
@@ -80,11 +81,9 @@ npm install -g wrangler
 wrangler login
 
 # 构建并部署
-npm run build
-wrangler pages deploy .next --project-name=ai-draw
+npx @cloudflare/next-on-pages
+wrangler pages deploy .vercel/output/static --project-name=ai-draw
 ```
-
-📚 详细部署说明请查看 [Cloudflare 部署指南](CLOUDFLARE_DEPLOYMENT.md)
 
 ### 方式三：Docker 部署
 
