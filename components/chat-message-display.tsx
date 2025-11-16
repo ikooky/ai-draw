@@ -86,6 +86,21 @@ export function ChatMessageDisplay({
                                 processedToolCalls.current.add(toolCallId);
                             }
                         }
+                    } else if (part.type === "text" && message.role === "assistant") {
+                        // Handle XML in markdown code blocks for models without tool support
+                        const xmlCodeBlockRegex = /```xml\s*\n([\s\S]*?)\n```/;
+                        const match = part.text?.match(xmlCodeBlockRegex);
+
+                        if (match && match[1]) {
+                            const extractedXml = match[1].trim();
+                            // Use message.id as a unique identifier for text-based XML
+                            const textXmlId = `text-xml-${message.id}`;
+
+                            if (!processedToolCalls.current.has(textXmlId)) {
+                                handleDisplayChart(extractedXml);
+                                processedToolCalls.current.add(textXmlId);
+                            }
+                        }
                     }
                 });
             }

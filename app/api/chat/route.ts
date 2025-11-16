@@ -123,13 +123,22 @@ ${lastMessageText}
     // If modelId is provided, use it; otherwise, use the default (first) model
     const { model, providerOptions } = getAIModel(modelId);
 
-    const result = streamText({
+    // 检测模型是否支持工具调用
+    // Claude 和 Gemini 通过 OpenAI 兼容接口可能不完全支持工具调用
+    const supportsTools = !modelId ||
+      (!modelId.includes('gemini') && !modelId.toLowerCase().includes('claude'));
+
+    const streamConfig: any = {
       model,
       system: systemMessage,
       messages: enhancedMessages,
+      temperature: 0,
       ...(providerOptions && { providerOptions }),
-      tools: {
-        // Client-side tool that will be executed on the client
+    };
+
+    // 只有支持工具调用的模型才添加 tools 配置
+    if (supportsTools) {
+      streamConfig.tools = {
         display_diagram: {
           description: `Display a diagram on draw.io. You only need to pass the nodes inside the <root> tag (including the <root> tag itself) in the XML string.
           For example:
@@ -161,9 +170,28 @@ IMPORTANT: Keep edits concise:
             })).describe("Array of search/replace pairs to apply sequentially")
           })
         },
-      },
-      temperature: 0,
-    });
+      };
+    } else {
+      // 对于不支持工具调用的模型，在 system message 中添加 XML 输出指令
+      streamConfig.system = systemMessage + `
+
+IMPORTANT: Since tool calling is not available, please output the diagram XML directly in your response.
+When the user asks for a diagram, respond with:
+1. A brief explanation of what you're creating
+2. The complete draw.io XML wrapped in triple backticks with "xml" language identifier
+
+Example:
+\`\`\`xml
+<root>
+  <mxCell id="0"/>
+  <mxCell id="1" parent="0"/>
+  ...
+</root>
+\`\`\`
+`;
+    }
+
+    const result = streamText(streamConfig);
 
     // Error handler function to provide detailed error messages
     function errorHandler(error: unknown) {
