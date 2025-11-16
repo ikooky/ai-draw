@@ -69,7 +69,10 @@ Support for any OpenAI-compatible API service:
    - Build output directory: `.vercel/output/static`
    - Environment variables (Production): `CUSTOM_BASE_URL`, `CUSTOM_API_KEY`, `CLOUDFLARE=true`
    - Node.js version: `18` or higher
-6. Deploy and access via `https://your-project.pages.dev`
+6. Configure compatibility flags (Important):
+   - Go to project **Settings** → **Functions** → **Compatibility flags**
+   - Add `nodejs_compat` to both **Production** and **Preview** environments
+7. Deploy and access via `https://your-project.pages.dev`
 
 **Or deploy via Wrangler CLI:**
 

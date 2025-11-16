@@ -69,7 +69,10 @@ AI 驱动的 Draw.io 图表编辑器，通过自然语言创建和编辑专业�
    - 构建输出目录：`.vercel/output/static`
    - 环境变量（Production）：`CUSTOM_BASE_URL`、`CUSTOM_API_KEY`、`CLOUDFLARE=true`
    - Node.js 版本：`18` 或更高
-6. 部署后访问 `https://your-project.pages.dev`
+6. 配置兼容性标志（重要）：
+   - 进入项目 **Settings** → **Functions** → **Compatibility flags**
+   - 在 **Production** 和 **Preview** 环境中都添加：`nodejs_compat`
+7. 部署后访问 `https://your-project.pages.dev`
 
 **或使用 Wrangler CLI 部署：**
 

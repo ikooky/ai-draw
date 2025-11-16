@@ -1,6 +1,7 @@
 # Cloudflare Pages 配置文件
 name = "ai-draw"
 compatibility_date = "2025-01-15"
+compatibility_flags = ["nodejs_compat"]
 
 # 环境变量在 Cloudflare Dashboard 中配置
 # Settings -> Environment variables
