@@ -12,7 +12,8 @@ export async function GET() {
     const models = await fetchAvailableModels();
 
     // 获取 base URL 用于显示
-    const { baseURL } = getAPIConfig();
+    const config = getAPIConfig();
+    const baseURL = config?.baseURL || 'Not configured';
 
     // 返回模型列表（不包含 API Key）
     return Response.json({
